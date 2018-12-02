@@ -78,4 +78,52 @@ def startfig(w=4,h=2,rows=1,columns=1,wrs=None,hrs=None,frameon=True,return_firs
         a = fig.add_subplot(gs[0,0],frameon=frameon)
         return a,fig,gs
     else:
-        return fig,gs  
+        return fig,gs
+    
+    
+# by SLW and CSW, copied from spring helper functions
+def tot_counts_norm_sparse(E, exclude_dominant_frac = 1, included = [], target_mean = 0):
+    E = E.tocsc()
+    ncell = E.shape[0]
+    if len(included) == 0:
+        if exclude_dominant_frac == 1:
+            tots_use = E.sum(axis=1)
+        else:
+            tots = E.sum(axis=1)
+            wtmp = scipy.sparse.lil_matrix((ncell, ncell))
+            wtmp.setdiag(1. / tots)
+            included = np.asarray(~(((wtmp * E) > exclude_dominant_frac).sum(axis=0) > 0))[0,:]
+            tots_use = E[:,included].sum(axis = 1)
+            print('Excluded %i genes from normalization' %(np.sum(~included)))
+    else:
+        tots_use = E[:,included].sum(axis = 1)
+
+    if target_mean == 0:
+        target_mean = np.mean(tots_use)
+
+    w = scipy.sparse.lil_matrix((ncell, ncell))
+    w.setdiag(float(target_mean) / tots_use)
+    Enorm = w * E
+
+    return Enorm.tocsc(), target_mean, included
+
+
+#for saving dictionaries
+def save_stuff(stuff,path):
+    u"""for saving dictionaries, but probably works with lists and other pickleable objects"""
+    import pickle
+    with open(path+u'.pickle', u'wb') as handle:
+        pickle.dump(stuff, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+def load_stuff(path):
+    import pickle
+    with open(path, u'rb') as handle:
+        return pickle.load(handle)
+    
+    
+def flatten_list_of_lists(list_of_lists):
+    '''one line, but hard to memorize,
+    so here is a function.
+    flat_list = [item for sublist in list_of_lists for item in sublist]
+    '''
+    return [item for sublist in list_of_lists for item in sublist]
