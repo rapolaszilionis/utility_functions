@@ -1,7 +1,7 @@
 # import statements
 
 import platform
-print(platform.python_version()) # prints python version
+print("python version:",platform.python_version()) # prints python version
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
