@@ -7,8 +7,8 @@ rz_utility_spring.py - custom functions mostly related visualizing data using
 	SPRING (https://github.com/AllonKleinLab/SPRING). Some of them use the AnnData format
 	which is the core object of scanpy (https://github.com/theislab/scanpy).
 	
-Suggestion for how to import:
-from rz_import_statements import *
-from rz_fig_params import *
-import rz_functions as rz
-import rz_utility_spring as srz
+Suggestion for how to import:   
+from rz_import_statements import *.  
+from rz_fig_params import *.  
+import rz_functions as rz.  
+import rz_utility_spring as srz.  
