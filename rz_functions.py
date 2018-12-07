@@ -2,6 +2,12 @@
 
 from rz_import_statements import *
 
+
+##################################################
+# Function dependent on standard libraries only, #
+# e.g. pandas, numpy, scanpy					 #
+##################################################
+
 def oset(a_list):
     """given a list/1d-array, returns an ordered set (list)"""
     seen = set()
@@ -9,7 +15,7 @@ def oset(a_list):
     return [x for x in a_list if not (x in seen or seen_add(x))]
 
 
-#by AV for saving and loading pandas dataframes
+# From Adrian Veres for saving and loading pandas dataframes (modified)
 def save_df(obj, filename):
     np.savez_compressed(filename, data=obj.values, index=obj.index.values, columns=obj.columns.values)
     
@@ -21,6 +27,7 @@ def load_df(filename,encoding=u'ASCII'):
     with np.load(filename,encoding=encoding) as f:
         obj = pd.DataFrame(**f)
     return obj
+
 
 # for reading barcode and gene list (single column)
 def read_col(path):
@@ -272,7 +279,7 @@ def custom_colormap(colors,positions=[],cmap_name = 'my_cmap',register=False):
 
 def value_to_color(value,vmin,vmax,cmap=mpl.cm.get_cmap('RdBu_r'),string_color='#FFFFFF'):
     
-    """takes a value (float or int) and turns  a hex code (string).
+    """takes a value (float or int) and turns a hex code (string).
     input:
         - value: float or integer
         - vmin: min value in full range
@@ -293,9 +300,24 @@ def value_to_color(value,vmin,vmax,cmap=mpl.cm.get_cmap('RdBu_r'),string_color='
     return "#{:02x}{:02x}{:02x}".format(int(rgb[0]*255),int(rgb[1]*255),int(rgb[2]*255))
 
 
+def flatten_list_of_lists(list_of_lists):
+    '''one line, but hard to memorize:
+    [item for sublist in list_of_lists for item in sublist]
+    Therefore a function
+    flat_list = [item for sublist in list_of_lists for item in sublist]
+    '''
+    return [item for sublist in list_of_lists for item in sublist]
+    
+    
+################################################
+# Function dependent on standard libraries AND #
+# custom functions defined above  	           #
+################################################
+
+
 def color_dataframe_cells(
     frame,
-    cmap = custom_colormap(['#FFFFFF','#808080']),
+    cmap = mpl.cm.get_cmap('RdBu_r'),
     vmin = None,
     vmax = None,
     ):
@@ -314,6 +336,8 @@ def color_dataframe_cells(
     Example of use (including saving to excel):
     color_dataframe_cells(my_dataframe).to_excel('table.xlsx')
     
+    Depends on custom function value_to_color
+    
     """
     
     if vmin is None:
@@ -323,11 +347,3 @@ def color_dataframe_cells(
         
     return frame.style.applymap(lambda x: 'background-color: %s'%value_to_color(x,vmin,vmax,cmap=cmap))
 
-
-def flatten_list_of_lists(list_of_lists):
-    '''one line, but hard to memorize,
-    so here is a function.
-    flat_list = [item for sublist in list_of_lists for item in sublist]
-    '''
-    return [item for sublist in list_of_lists for item in sublist]
-    
