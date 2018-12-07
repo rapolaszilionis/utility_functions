@@ -19,3 +19,4 @@ import copy
 import sys,os
 
 import statsmodels.sandbox.stats.multicomp
+from sklearn.decomposition import PCA, TruncatedSVD
