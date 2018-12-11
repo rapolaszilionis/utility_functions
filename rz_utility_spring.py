@@ -442,7 +442,7 @@ def get_vscores_sparse(E, min_mean=0, nBins=50, fit_percentile=0.1, error_wt=1):
 
 def vscores(
                 E,
-                base_ix,
+                base_ix=None,
                ):
     
     """
@@ -465,6 +465,8 @@ def vscores(
                 of mRNA transcripts in originally present cells (N) (cell size correction)
         
     """
+    if base_ix is None:
+    	base_ix = np.arange(E.shape[0])
     
     # calculate v scores
     v_scores, CV_eff, CV_input, gene_ix, mu_gene, FF_gene, a, b = get_vscores_sparse(E[base_ix, :])

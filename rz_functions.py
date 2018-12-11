@@ -309,6 +309,54 @@ def flatten_list_of_lists(list_of_lists):
     return [item for sublist in list_of_lists for item in sublist]
     
     
+def pearsonr(a,b):
+    
+    """ calculated pairwise Pearson correlation between two arrays. Along the rows.
+    The length of rows has to match between a and b.
+    
+    Input:
+        a and b - np.array
+    Returns:
+        np.array() with observations corresponding to rows of a as rows and observations corresponding
+        to rows of b as columns.
+    """
+    
+    # check the shape of a
+    if len(a.shape)==2:
+        # nothing to change
+        pass
+    elif len(a.shape)==1:
+        # make 2D
+        a = a.reshape(1,len(a))
+    else:
+        print("a has to be either 1D or 2D")
+        return
+        
+    
+    # check the shape of b
+    if len(b.shape)==2:
+        # nothing to change
+        pass
+    elif len(b.shape)==1:
+        # make 2D
+        b = b.reshape(1,len(b))
+    else:
+        print("b has to be either 1D or 2D")
+        return
+        
+    # check that row lengths match:
+    if a.shape[1]!=b.shape[1]:
+        print("Row length mismatch: %d for a and %d for b"%(a.shape[1],b.shape[1]))
+        return
+    
+    # mean center and variance stabilize
+    a = (a.T - a.mean(axis=1))/a.std(axis=1)
+    b = (b.T - b.mean(axis=1))/b.std(axis=1)
+    
+    # get the correlation coefficients
+    return a.T.dot(np.array(b))/len(a)
+    
+    
 ################################################
 # Function dependent on standard libraries AND #
 # custom functions defined above  	           #
