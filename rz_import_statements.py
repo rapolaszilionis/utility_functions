@@ -17,6 +17,9 @@ from scipy import stats
 from scipy import sparse
 import copy
 import sys,os
+import json
+import sklearn.cluster
+from sklearn.cluster import SpectralClustering
 
 import statsmodels.sandbox.stats.multicomp
 from sklearn.decomposition import PCA, TruncatedSVD
