@@ -12,6 +12,8 @@ import json
 import time
 from pandas.api.types import is_categorical
 from sklearn.decomposition import PCA, TruncatedSVD
+import sklearn.cluster
+from sklearn.cluster import SpectralClustering
 
 
 
@@ -390,6 +392,65 @@ def export_spring_plot(
 
 
     return None
+    
+###################################################################################################        
+
+def read_spring_graph(springpath):
+    """
+    Reads the edges.csv and cell_filter.npy for the directory
+    or a given spring plot and outputs the knn graph in a sparse format.
+    Adapted from SLW or CSW.
+    """
+
+    edge_file = springpath+'/edges.csv'
+    cell_file = springpath+'/cell_filter.npy'
+    
+    edge_list = np.loadtxt(edge_file, delimiter = ';', dtype = int)
+    cell_list = np.load(cell_file)
+    n_cell = len(cell_list)
+    A = scipy.sparse.lil_matrix((n_cell, n_cell))
+
+    for iEdge in range(edge_list.shape[0]):
+        ii = edge_list[iEdge,0]
+        jj = edge_list[iEdge,1]
+        A[ii,jj] = 1
+        A[jj,ii] = 1
+    t1 = time.time()
+    return A.tocsr()
+    
+###################################################################################################    
+
+def spec_clust(A, k):
+    """
+    Spectral clustering
+    Input:
+    	A - sparse adjacency matrix
+    	k - number of clusters to partition into
+    Returns:
+    	np.array with labels
+    Inspired by SLW
+    """
+    spec = sklearn.cluster.SpectralClustering(n_clusters=k, random_state = 0,
+                                              affinity = 'precomputed', assign_labels = 'discretize')
+    return spec.fit_predict(A)
+
+###################################################################################################    
+
+def frac_to_hex(frac):
+    rgb = tuple(np.array(np.array(plt.cm.jet(frac)[:3])*255,dtype=int))
+    return '#%02x%02x%02x' % rgb
+    
+###################################################################################################   
+
+def read_cell_groupings(path='categorical_coloring_data.json'):
+    with open(path) as json_data:
+        d = json.load(json_data)
+    return d
+    
+
+
+
+
 
 ######################################
 # dependend on standard libraries	 #
@@ -627,9 +688,56 @@ def find_num_pc(Z,n=10,start_pc = 200,sparse=False,svd_solver='randomized'):
            'pca':pca,
            'num_pc':num_pc}
 
+###################################################################################################
 
+def append_cell_groupings(spring_path,cg,backup=True,colordd={}):
+    
+    if spring_path[-1]!='/':
+        spring_path = spring_path + '/'
+    
+    # read cell groupings
+    cg_orig = read_cell_groupings(spring_path+'categorical_coloring_data.json')
 
+    # extract labels, drop color info
+    cg_orig = {key:value['label_list'] for key,value in cg_orig.items()}
+    
+    thelen = len(list(cg_orig.values())[0])
+    # append new colortracks:
+    for key,value in cg.items():
+        if thelen!=len(value):
+            print("length mismatch for %s, expected %d, given %d. Skipping."%(str(key),thelen,len(value)))
+            continue
+        else:
+            cg_orig[key] = value
+    
+    overwrite_cell_groupings(spring_path, cg_orig,backup=backup,colordd=colordd)
 
+###################################################################################################
 
-
-
+def overwrite_cell_groupings(spring_path, cell_groupings,backup=True,colordd={}):
+    """colordd - optional, dictionary of color dictionaries. Upper level keys: cell grouping names"""
+    if spring_path[-1]!='/':
+        spring_path = spring_path + '/'
+        
+    if backup==True:
+        import datetime
+        import shutil
+        src = 'categorical_coloring_data.json'
+        
+        #backup color_data_gene_sets.csv
+        dst=src+'.backup_'+datetime.datetime.now().strftime('%y%m%d_%Hh%M')
+        shutil.copy2(spring_path+src,spring_path+dst)
+    
+    categorical_coloring_data = {}
+    for k,labels in cell_groupings.items():
+        label_colors = {l:frac_to_hex(float(i)/len(set(labels))) for i,l in enumerate(list(set(labels)))}
+        if k in colordd:
+            usr_dict = colordd[k]
+            for key in usr_dict:
+                if key in label_colors:
+                    label_colors[key] = usr_dict[key]
+        
+        categorical_coloring_data[k] = {'label_colors':label_colors, 'label_list':labels}
+    with open(spring_path+'categorical_coloring_data.json','w') as f:
+            f.write(json.dumps(categorical_coloring_data,indent=4, sort_keys=True))
+            
