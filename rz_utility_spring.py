@@ -14,6 +14,7 @@ from pandas.api.types import is_categorical
 from sklearn.decomposition import PCA, TruncatedSVD
 import sklearn.cluster
 from sklearn.cluster import SpectralClustering
+import datetime
 
 
 
@@ -447,8 +448,63 @@ def read_cell_groupings(path='categorical_coloring_data.json'):
         d = json.load(json_data)
     return d
     
+###################################################################################################   
 
+def append_color_tracks(ctracks, fname,backup=False):
+    
+    """
+    ctracks - dictionary of continuous colortracks to append
+    fname - path to spring directory containing color_stats.json and color_data_gene_sets.csv
+    if backup=True, will safe backups of original color_data_gene_sets.csv and color_stats.json files.
+    """
+    
+    cs = fname+'/color_stats.json'
+    gs = fname+'/color_data_gene_sets.csv'
 
+    if backup==True:
+        import shutil
+        
+        #backup color_data_gene_sets.csv
+        dst=gs+'.backup1_'+datetime.datetime.now().strftime('%y%m%d_%Hh%M')
+        shutil.copy2(gs,dst)
+        
+        #backup color_stats.json
+        dst=cs+'.backup1_'+datetime.datetime.now().strftime('%y%m%d_%Hh%M')
+        shutil.copy2(cs,dst)
+        
+    #============== update color_data_gene_sets.csv ==============
+    
+    #load old colotracks
+    oldtracks = pd.read_csv(gs,sep=',',header=None, index_col=0)
+    oldtracks.columns = np.arange(oldtracks.shape[1]) #reset columns
+
+    #put new colortracks into a pandas dataframe
+    newtracks = pd.DataFrame(ctracks).T
+
+    #drop old colotracks that have the same name as the new ones:
+    for i in newtracks.index:
+        if i in oldtracks.index:
+            oldtracks.drop(i,inplace=True)
+
+    #concatenate
+    cattracks = pd.concat([oldtracks,newtracks])
+    curorder = list(cattracks.index)
+
+    #order aphabetically except first two colortracks (Total umis and uniform)
+    neworder = curorder[:2]+sorted(curorder[2:])
+    cattracks = cattracks.loc[neworder,:]
+
+    cattracks.to_csv(gs,header=None,float_format='%.3f')
+    
+    #============== update color_stats.json ==============
+    with open(cs,"r") as f:
+        color_stats = json.load(f)
+    
+    for k,v in ctracks.items():
+        color_stats[k] = (0,1,float(np.min(v)),float(np.max(v)+.01),float(np.percentile(v,99)))
+       
+    with open(cs,'w') as f:
+        f.write(json.dumps(color_stats,indent=4, sort_keys=True))
 
 
 
