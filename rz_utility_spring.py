@@ -429,7 +429,8 @@ def spec_clust(A, k):
     	k - number of clusters to partition into
     Returns:
     	np.array with labels
-    Inspired by SLW
+    From: https://github.com/AllonKleinLab/SPRING_dev/blob/master/data_prep/helper_functions.py
+    2018 12 14
     """
     spec = sklearn.cluster.SpectralClustering(n_clusters=k, random_state = 0,
                                               affinity = 'precomputed', assign_labels = 'discretize')
