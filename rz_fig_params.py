@@ -1,6 +1,8 @@
 # my global plotting parameters for the entire notebook
 
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+
 mylines = 0.15*2.82 # the number 2.82 is the difference
 					# between Illustrator 1 pt and python 1 pt.
 mpl.rcParams['axes.linewidth'] = mylines # default 1
@@ -19,11 +21,13 @@ mpl.rcParams['legend.frameon'] = False # default True
 mpl.rcParams['figure.dpi']= 150
 mpl.rc("savefig", dpi=150)
 
-# set fontsize and style:
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-
 # the two lines below will make fonts in pdfs readable
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['ps.fonttype'] = 42
+
+# set fontsize and style:
 plt.rc('font', family = 'Myriad Pro',size = 6)
+
+# it seems like all but the following 2 lines get imported, to figure out at some point
+# mpl.rcParams['figure.dpi']= 150
+# plt.rc('font', family = 'Myriad Pro',size = 6)
