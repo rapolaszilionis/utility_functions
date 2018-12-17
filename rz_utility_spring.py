@@ -642,7 +642,9 @@ def zscore_sparse(E,base_ix=[],var_stab_only=False):
 
 ###################################################################################################
 
-def find_num_pc(Z,n=10,start_pc = 200,sparse=False,svd_solver='randomized'):
+def find_num_pc(Z,n=10,start_pc = 200,sparse=False,
+                    svd_solver='randomized',return_all_pca=False,
+                    print_progression=True):
     
     """Find the number of non-random principle components.
     Steps:
@@ -664,6 +666,8 @@ def find_num_pc(Z,n=10,start_pc = 200,sparse=False,svd_solver='randomized'):
             Check the documentation for sklearn.decomposition.PCA and sklearn.decomposition.TruncatedSVD
             for more details.
             On a quick test randomized seem faster than arpack
+        return_all_pca - if True, will return a list with pca objects calculated on the random data
+        print_progression - verbose or not
         
         
     returns:
@@ -685,7 +689,8 @@ def find_num_pc(Z,n=10,start_pc = 200,sparse=False,svd_solver='randomized'):
     insuff_pcs = True
     maxpc = 0
     
-   
+    if return_all_pca:
+        rnd_pca = []
     
     l = []
     counter=0
@@ -705,18 +710,27 @@ def find_num_pc(Z,n=10,start_pc = 200,sparse=False,svd_solver='randomized'):
             
 
         # get observed eigenvalues
-        print("calculating the first %d observed eigenvalues..."%numpc)
+        if print_progression:
+            print("calculating the first %d observed eigenvalues..."%numpc)
         pca.fit(Z)
         ev_obs = np.msort(pca.explained_variance_)[::-1] #make sure to sort eigenvalues
         
         # shuffle once
         counter+=1
-        print("calculating the random eigenvalues for %d rounds of shuffling..."%n)
+        if print_progression:
+            print("calculating the random eigenvalues for %d rounds of shuffling..."%n)
         Zshuff = shuffle_rows(Z.T,seed=counter,sparse=sparse,nonzeros=nonzeros).T
         pca_shuff.fit(Zshuff)
+        
+        # if more than just the random eigenvalues needed
+        if return_all_pca:
+            rnd_pca.append(pca_shuff)
+        
         ev_rnd = max(pca_shuff.explained_variance_)
         l.append(ev_rnd)
-        print(counter,'\t',sum(ev_obs>ev_rnd),'\t','%.2f min.'%((time.time()-start)/60.))
+        
+        if print_progression:
+            print(counter,'\t',sum(ev_obs>ev_rnd),'\t','%.2f min.'%((time.time()-start)/60.))
 
         insuff_pcs = (ev_obs<(ev_rnd*0.9)).sum()==0 #this sum is 0 if too few observed PCs calculated
 
@@ -733,17 +747,30 @@ def find_num_pc(Z,n=10,start_pc = 200,sparse=False,svd_solver='randomized'):
         counter+=1
         Zshuff = shuffle_rows(Z.T,seed=counter,sparse=sparse,nonzeros=nonzeros).T
         pca_shuff.fit(Zshuff)
+        
+        # if more than just the random eigenvalues needed
+        if return_all_pca:
+            rnd_pca.append(pca_shuff)
+        
         ev_rnd = max(pca_shuff.explained_variance_)
         l.append(ev_rnd)
-        print(counter,'\t',sum(ev_obs>ev_rnd),'\t','%.2f min.'%((time.time()-start)/60.))
+        
+        if print_progression:
+            print(counter,'\t',sum(ev_obs>ev_rnd),'\t','%.2f min.'%((time.time()-start)/60.))
 
     #for each round of shuffling genes, what is the number of obs eigenvalues larger than the largest random eigenvalue
     nrlarger = [(ev_obs>i).sum() for i in l]
     num_pc = int(np.percentile(np.array(nrlarger),0.05))
     
-    return {'list_non_rand':nrlarger,
+    res = {'list_non_rand':nrlarger,
            'pca':pca,
            'num_pc':num_pc}
+    
+    if return_all_pca:
+        res['rnd_pca'] = rnd_pca
+    
+    return res
+
 
 ###################################################################################################
 
