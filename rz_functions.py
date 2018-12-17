@@ -356,6 +356,115 @@ def pearsonr(a,b):
     # get the correlation coefficients
     return a.T.dot(np.array(b))/len(a)
     
+#######################################################################################################
+    
+def now():
+    """spring current date and time as filename-friendly string"""
+    return datetime.datetime.now().strftime('%y%m%d_%Hh%M')
+    
+#######################################################################################################
+
+def centroids(label,adata,E=None,gene_list=None):
+    
+    """
+    Calculate average gene expression label per cell label (e.g. cluster).
+    input:
+        - label: name of column that stores the label of interest in adata.obs
+        - adata: AnnData object OR a cell x feature pandas dataframe with label as one of the columns
+        - E and gene_list: optional and only used when adata is not an AnnData object. In that case
+        the cells x genes sparse expression matrix E and the gene_list must be specified
+        
+    returns:
+        pandas dataframe, cells x centroids
+        
+    """
+    
+    if isinstance(adata,AnnData):
+        E = adata.X
+        gene_list = adata.var_names
+        meta = adata.obs
+    else:
+        meta = adata
+        
+        
+    groups = meta.groupby(label).groups
+    centroids = {}
+    for key in groups.keys():
+        msk = (meta[label] == key).values #use "values" to turn pd.Series into row-label-less np.array,
+                                             #sometimes row labels mess up the order
+
+        centroids[key] = E[msk,:].mean(axis=0)
+    centroids=pd.DataFrame(centroids).T
+    centroids.columns = gene_list
+    return centroids
+
+#######################################################################################################
+
+def max_to_2nd_max(avector,pseudo=0):
+    s = sorted(avector)
+    themax = s[-1]
+    the2ndmax = s[-2]
+    return (themax+pseudo)/(the2ndmax+pseudo)
+
+#######################################################################################################
+
+def mwu(cg1,cg2,genes,print_progression=True):
+    """perform MWU test for each gene comparing
+    cells group 1 (cg1) and cell group 2 (cg2).
+    Input:
+        - cg1 and cg2: expression matrixes to compared, np.array, cells x genes
+        - genes: gene list
+        - if print_progression, will print a message every 1000 genes
+    returns:
+        pd.DataFrame with results, includes FDR calculation
+    
+    """
+    
+    # calculate the average per group compared to add to results.
+    m1 = cg1.mean(axis=0)
+    m2 = cg2.mean(axis=0)
+    
+    res = []
+    counter = 0
+    for i in range(cg1.shape[1]):
+        counter+=1
+        if print_progression:
+            if int(counter/1000)==counter/1000.:
+                print(counter)
+                
+        res.append(scipy.stats.mannwhitneyu(cg1[:,i],cg2[:,i],
+                                            alternative='two-sided'))
+
+    us = [i[0] for i in res]
+    ps = [i[1] for i in res]
+    import statsmodels
+    cps = statsmodels.sandbox.stats.multicomp.multipletests(ps,method = 'fdr_bh')[1]
+
+    return pd.DataFrame([us,ps,list(cps),list(m1),list(m2)],
+                        columns=list(genes),index = ['U_statistic','p','fdr','mean1','mean2']).T
+
+#######################################################################################################
+
+#for saving dictionaries
+def save_stuff(stuff,path):
+    u"""for saving dictionaries, but probably works with lists and other pickleable objects"""
+    import pickle
+    with open(path+u'.pickle', u'wb') as handle:
+        pickle.dump(stuff, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+#######################################################################################################
+        
+def load_stuff(path):
+    """for loading object saved using 'save_stuff'"""
+    import pickle
+    with open(path, u'rb') as handle:
+        return pickle.load(handle)    
+    
+#######################################################################################################
+
+
+
+    
     
 ################################################
 # Function dependent on standard libraries AND #
