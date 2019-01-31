@@ -20,6 +20,7 @@ import sys,os
 import json
 import sklearn.cluster
 from sklearn.cluster import SpectralClustering
+import fastcluster
 
 import statsmodels.sandbox.stats.multicomp
 from sklearn.decomposition import PCA, TruncatedSVD
