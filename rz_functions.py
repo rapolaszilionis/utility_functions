@@ -376,7 +376,7 @@ def centroids(label,adata,E=None,gene_list=None):
         the cells x genes sparse expression matrix E and the gene_list must be specified
         
     returns:
-        pandas dataframe, cells x centroids
+        pandas dataframe, centroids x genes
         
     """
     
