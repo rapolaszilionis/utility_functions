@@ -388,13 +388,13 @@ def centroids(label,adata,E=None,gene_list=None):
         meta = adata
         
         
-    groups = meta.groupby(label).groups
+    labs = meta[label].unique()
     centroids = {}
-    for key in groups.keys():
-        msk = (meta[label] == key).values #use "values" to turn pd.Series into row-label-less np.array,
+    for lab in labs:
+        msk = (meta[label] == lab).values #use "values" to turn pd.Series into row-label-less np.array,
                                              #sometimes row labels mess up the order
 
-        centroids[key] = np.array(E[msk,:].mean(axis=0))[0]
+        centroids[lab] = np.array(E[msk,:].mean(axis=0))[0]
     centroids=pd.DataFrame(centroids).T
     centroids.columns = gene_list
     return centroids
