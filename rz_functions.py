@@ -90,6 +90,7 @@ def get_centroids(meta,E,colname,gene_list):
         centroids[label] = np.array(E[msk,:].mean(axis=0))[0]
     centroids=pd.DataFrame(centroids)[uq].T
     centroids.columns = gene_list
+    print('Check also a more AnnData-friendly alternative function "centroids"')
     return centroids
 
 
