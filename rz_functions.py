@@ -368,7 +368,7 @@ def now():
 def centroids(label,adata,E=None,gene_list=None):
     
     """
-    Calculate average gene expression label per cell label (e.g. cluster).
+    Calculate average gene expression level per cell label (e.g. cluster).
     input:
         - label: name of column that stores the label of interest in adata.obs
         - adata: AnnData object OR a cell x feature pandas dataframe with label as one of the columns
