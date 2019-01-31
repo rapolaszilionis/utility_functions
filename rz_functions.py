@@ -462,8 +462,89 @@ def load_stuff(path):
     
 #######################################################################################################
 
+def yticks_fancy(a,totick,labels_all,emptychar = '',fontsize=5):
+    
+    """
+    utility function originally made for ticking only a subset of selected genes in a genes x observations heatmap.
+    example of use: yticks_fancy(a,['Csf1r','Ccr2','','','Arg1','S100a9'],genes_by_cells.index)
+    input:
+        a - axis with heatmap
+        totick - list of yticklabels to display. Use the string defined by
+        emptychar to add spacing between groups of genes.
+        labels_all - all yticklabels.
+        emptychar - string that will be treated as white space
+        
+    returns: nothing
+    
+    """
 
 
+    a.set_yticks([])
+    leftshift = 0
+    totick = np.array(totick)
+    nr_slots = len(totick)
+    tickmask = np.array([i!=emptychar for i in totick])
+    totick = totick[tickmask]
+    y_right = np.array([pd.Index(labels_all).get_loc(i) for i in totick])
+    
+    #if genes were not typed in in the correct order, account for that to avoid lines crossing
+    tickorder = np.argsort(y_right)
+    y_right = y_right[tickorder]
+    totick = totick[tickorder]
+    y_left = np.linspace(0,len(labels_all),nr_slots)[tickmask]
+    for l,r,gene in zip(y_left,y_right,totick):
+        a.plot((-0.8-leftshift,-0.5-leftshift),(r,r),lw=0.5,color='0.2')
+        a.plot((-1.2-leftshift,-0.8-leftshift),(l,r),lw=0.5,color='0.2')
+        a.plot((-1.5-leftshift,-1.2-leftshift),(l,l),lw=0.5,color='0.2')
+        a.text(-1.6-(leftshift*1.6),l,gene,ha='right',va='center',fontsize=fontsize)
+        
+#######################################################################################################    
+
+def hier_cluster(datatable,hier_clust_rows=True,hier_clust_cols=True,method='ward',metric='sqrt_correlation'):
+    
+    """
+    assumes that the data table is a pandas dataframe, should also work on an numpy array.
+    My favorite combinations is sqrt_correlation distance (proportional to euclidean on zscored data) with
+    Ward linkage"""
+    
+    data = datatable.copy()
+    row_link=np.nan
+    col_link=np.nan
+    if hier_clust_rows:
+        #hierarchically cluster:
+        if metric=='sqrt_correlation':
+            pdist = scipy.spatial.distance.pdist(data,metric='correlation')**0.5
+        else:
+            pdist = scipy.spatial.distance.pdist(data,metric=metric)
+        row_link = fastcluster.linkage(pdist, method=method)
+        row_order = scipy.cluster.hierarchy.leaves_list(row_link)
+        try:
+            #pandas-style indexing
+            data = data.iloc[row_order,:]
+        except:
+            #numpy-style indexing
+            data = data[row_order,:]
+        
+    if hier_clust_cols:
+        #hierarchically cluster:
+        if metric=='sqrt_correlation':
+            pdist = scipy.spatial.distance.pdist(data.T,metric='correlation')**0.5
+        else:
+            pdist = scipy.spatial.distance.pdist(data.T,metric=metric)
+        col_link = fastcluster.linkage(pdist, method=method)
+        col_order = scipy.cluster.hierarchy.leaves_list(col_link)
+        try:
+            data = data.iloc[:,col_order]
+        except:
+            data = data[:,col_order]
+        
+    return {'data':data,'row_link':row_link,'col_link':col_link}
+
+
+
+#######################################################################################################    
+
+    
     
     
 ################################################
