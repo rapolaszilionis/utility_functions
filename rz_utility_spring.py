@@ -276,7 +276,8 @@ def export_spring_plot(
         Specify `adata.obs` keys for continuous coloring.
 
     """
-	import logging as logg
+    
+    import logging as logg
     
     
     # need to get nearest neighbors first
