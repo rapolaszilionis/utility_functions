@@ -394,7 +394,7 @@ def centroids(label,adata,E=None,gene_list=None):
         msk = (meta[label] == key).values #use "values" to turn pd.Series into row-label-less np.array,
                                              #sometimes row labels mess up the order
 
-        centroids[key] = E[msk,:].mean(axis=0)
+        centroids[key] = np.array(E[msk,:].mean(axis=0))[0]
     centroids=pd.DataFrame(centroids).T
     centroids.columns = gene_list
     return centroids
