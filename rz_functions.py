@@ -545,7 +545,23 @@ def hier_cluster(datatable,hier_clust_rows=True,hier_clust_cols=True,method='war
 
 #######################################################################################################    
 
+def showspines(an_axes,top=False,right=False,bottom=False,left=False):
+    """
+    for specifying which spines to make visible in a plot.
+    input: 
+        an_axes - matplotlib axes object
+    returns: nothing
+
+    """
+    #after reinstalling conda, top and left switches places...
+    [i for i in an_axes.spines.items()][3][1].set_visible(top) #top line
+    [i for i in an_axes.spines.items()][1][1].set_visible(right) #right line
+    [i for i in an_axes.spines.items()][2][1].set_visible(bottom) #bottom line
+    [i for i in an_axes.spines.items()][0][1].set_visible(left) #left line
+    an_axes.tick_params(bottom=bottom,right=right,left=left,top=top)
     
+    
+#######################################################################################################    
     
     
 ################################################
