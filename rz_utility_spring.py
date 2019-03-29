@@ -702,6 +702,35 @@ def save_counts_for_spring(adata,project_dir,tot_count_column = 'total_counts'):
 
 ###################################################################################################  
 
+def get_adjacency_from_json(json_path):
+
+	"""
+	input:
+		json_path - json file in SPRING directory, called 'graph_data.json'
+	
+	output:	
+		adjacency matrix, np.array
+	
+	Most likely inspired from here:
+	https://github.com/AllonKleinLab/SPRING_dev/blob/2220e527704b61f4489b33ce6b28f304310c3efd/cgi-bin/smooth_gene.py
+	
+	"""
+    import json
+    graph_data = json.load(open(json_path))
+    N = len(graph_data['nodes'])
+    cell_numbers = np.arange(N)
+    
+    adjacency_matrix = np.zeros((N,N), dtype=float)
+    for l in graph_data['links']:
+        i = l['source']
+        j = l['target']
+        adjacency_matrix[i,j] = 1
+        adjacency_matrix[j,i] = 1
+        
+    return adjacency_matrix
+
+###################################################################################################  
+
 
 ######################################
 # dependend on standard libraries	 #
