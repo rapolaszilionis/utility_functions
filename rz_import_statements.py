@@ -30,3 +30,6 @@ import itertools
 from collections import Counter
 from collections import OrderedDict
 import glob
+
+import io
+import gzip
