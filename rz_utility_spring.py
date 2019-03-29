@@ -508,101 +508,6 @@ def append_color_tracks(ctracks, fname,backup=False):
         f.write(json.dumps(color_stats,indent=4, sort_keys=True))
         
 ###################################################################################################   
-        
-def save_counts_for_spring(adata,project_dir,tot_count_column = 'total_counts'):
-    
-    """
-    Saves count data into a SPRING-compatible format.
-    Counts are saved once in "project_dir".
-    Any subset of the cells saved can be used to generate SPRING plots without making copies of count files.
-    Input:
-        adata: AnnData object with normalized counts under adata.X, and gene names under adata.var_names
-        project_dir: where to save
-        tot_count_column: columns in the adata.obs dataframe containing total counts prior to normalization
-    Returns:
-        Nothing, saves counts in project_dir.
-        
-    Example of use:
-    save_counts_for_spring(adata,"~/SPRING_dev/data/all_mouse_data/")
-    
-    code inspired by: https://github.com/theislab/scanpy/blob/master/scanpy/_exporting.py
-    
-    """
-    
-    # defining some helper functions I don't use outside "save_counts_for_spring"
-    ###########################
-    def write_hdf5_genes(E, gene_list, filename):
-        '''SPRING standard: filename = project_dir + "counts_norm_sparse_genes.hdf5"'''
-
-        E = E.tocsc()
-
-        hf = h5py.File(filename, 'w')
-        counts_group = hf.create_group('counts')
-        cix_group = hf.create_group('cell_ix')
-
-        hf.attrs['ncells'] = E.shape[0]
-        hf.attrs['ngenes'] = E.shape[1]
-
-        for iG, g in enumerate(gene_list):
-            counts = E[:,iG].A.squeeze()
-            cell_ix = np.nonzero(counts)[0]
-            counts = counts[cell_ix]
-            counts_group.create_dataset(g, data = counts)
-            cix_group.create_dataset(g, data = cell_ix)
-
-        hf.close()
-
-
-    def write_hdf5_cells(E, filename):
-        '''SPRING standard: filename = project_dir + "counts_norm_sparse_cells.hdf5" '''
-    
-        E = E.tocsr()
-    
-        hf = h5py.File(filename, 'w')
-        counts_group = hf.create_group('counts')
-        gix_group = hf.create_group('gene_ix')
-    
-        hf.attrs['ncells'] = E.shape[0]
-        hf.attrs['ngenes'] = E.shape[1]
-    
-        for iC in range(E.shape[0]):
-            counts = E[iC,:].A.squeeze()
-            gene_ix = np.nonzero(counts)[0]
-            counts = counts[gene_ix]
-            counts_group.create_dataset(str(iC), data = counts)
-            gix_group.create_dataset(str(iC), data = gene_ix)
-    
-        hf.close()
-
-
-    def write_sparse_npz(E, filename, compressed = False):
-        ''' SPRING standard: filename = project_dir + "/counts_norm.npz"'''
-        E = E.tocsc()
-        scipy.sparse.save_npz(filename, E, compressed = compressed)
-    
-    ###########################
-    
-    E = adata.X
-    gene_list = adata.var_names
-    total_counts = adata.obs[tot_count_column].values
-    
-    if not os.path.exists(project_dir):
-        os.makedirs(project_dir)
-    
-    # Write the counts matrices to project directory
-    print('saving for quick loading of genes...')
-    write_hdf5_genes(E, gene_list, project_dir + '/counts_norm_sparse_genes.hdf5')
-    print('saving for quick loading of cells...')
-    write_hdf5_cells(E, project_dir + '/counts_norm_sparse_cells.hdf5')
-    print('saving as npz...')
-    write_sparse_npz(E, project_dir + '/counts_norm.npz')
-    with open(project_dir + '/genes.txt', 'w') as o:
-        for g in gene_list:
-            o.write(g + '\n')
-    np.savetxt(project_dir + '/total_counts.txt', total_counts)
-    print('done')
-
-
 
 def save_counts_for_spring(adata,project_dir,tot_count_column = 'total_counts'):
     
@@ -702,31 +607,30 @@ def save_counts_for_spring(adata,project_dir,tot_count_column = 'total_counts'):
 
 ###################################################################################################  
 
-	def get_adjacency_from_json(json_path):
-	
+def get_adjacency_from_json(json_path):
+
 	"""
 	input:
 		json_path - json file in SPRING directory, called 'graph_data.json'
-	
+		
 	output:	
 		adjacency matrix, np.array
-	
+		
 	Most likely inspired from here:
 	https://github.com/AllonKleinLab/SPRING_dev/blob/2220e527704b61f4489b33ce6b28f304310c3efd/cgi-bin/smooth_gene.py
 	
 	"""
-	
 	graph_data = json.load(open(json_path))
 	N = len(graph_data['nodes'])
 	cell_numbers = np.arange(N)
 	
 	adjacency_matrix = np.zeros((N,N), dtype=float)
 	for l in graph_data['links']:
-	    i = l['source']
-	    j = l['target']
-	    adjacency_matrix[i,j] = 1
-	    adjacency_matrix[j,i] = 1
-	    
+		i = l['source']
+		j = l['target']
+		adjacency_matrix[i,j] = 1
+		adjacency_matrix[j,i] = 1
+			
 	return adjacency_matrix
 
 ###################################################################################################  
