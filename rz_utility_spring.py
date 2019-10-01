@@ -234,16 +234,6 @@ def export_spring_plot(
         custom_color_tracks=None,
         ):
     
-    from scanpy.exporting import (write_color_tracks,
-                                 get_color_stats_genes,
-                                 get_color_stats_custom,
-                                 write_color_stats, 
-                                 build_categ_colors,
-                                 write_cell_groupings,
-                                 get_edges,
-                                 write_graph,
-                                 write_edges)
-    
     
     """
     Modified from:
@@ -276,8 +266,31 @@ def export_spring_plot(
         Specify `adata.obs` keys for continuous coloring.
 
     """
-    
     import logging as logg
+	
+    # scanpy 1.3.4 requires no underscore before "exporting", but 1.4.4.post1 does need one
+    # below I am hangling this through a try and except
+    try:
+        from scanpy.exporting import (write_color_tracks,
+                                     get_color_stats_genes,
+                                     get_color_stats_custom,
+                                     write_color_stats, 
+                                     build_categ_colors,
+                                     write_cell_groupings,
+                                     get_edges,
+                                     write_graph,
+                                     write_edges)
+    
+    except:
+        from scanpy._exporting import (write_color_tracks,
+                                     get_color_stats_genes,
+                                     get_color_stats_custom,
+                                     write_color_stats, 
+                                     build_categ_colors,
+                                     write_cell_groupings,
+                                     get_edges,
+                                     write_graph,
+                                     write_edges)
     
     
     # need to get nearest neighbors first
