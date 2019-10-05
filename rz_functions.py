@@ -455,11 +455,13 @@ def save_stuff(stuff,path):
         
 #######################################################################################################
         
-def load_stuff(path):
-    """for loading object saved using 'save_stuff'"""
+def load_stuff(path,encoding='ASCII'):
+    """for loading object saved using 'save_stuff'.
+    I had to use encoding='bytes' to load in python3 
+    certain data pickled in python2."""
     import pickle
     with open(path, u'rb') as handle:
-        return pickle.load(handle)    
+        return pickle.load(handle,encoding=encoding)    
     
 #######################################################################################################
 
